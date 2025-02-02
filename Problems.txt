@@ -1,0 +1,2 @@
+1) Understanding and building the websockets for the first time.
+2) DTO class.

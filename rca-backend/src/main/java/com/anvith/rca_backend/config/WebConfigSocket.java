@@ -14,9 +14,10 @@ public class WebConfigSocket implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry config) {
         // "/chat": This is the endpoint URL where clients will connect.
         config.addEndpoint("/chat")
-                //setAllowedOrigins("http://localhost:3000"): This allows connections
-                //only from http://localhost:3000 (usually your frontend application).
-                .setAllowedOrigins("http://localhost:3000")
+                //setAllowedOrigins("http://localhost:3000"):
+                //From the frontend.
+                // This allows connections only from http://localhost:3000 (usually your frontend application).
+                .setAllowedOrigins("http://localhost:5173")
                 //This enables SockJS fallback options, which means if WebSocket is not supported by the browser,
                 // it will fall back to other methods like HTTP polling.
                 .withSockJS();

@@ -11,63 +11,60 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
+@RestController  // Changed to @RestController for automatic JSON handling
 @RequestMapping("/api/v1/rooms")
+@CrossOrigin("*")
 public class RoomController {
 
     @Autowired
-    public RoomRepository roomRepository;
+    private RoomRepository roomRepository;
 
-    //Create Room
-    @PostMapping("/createRoom")
-    public ResponseEntity<?> createRoom(@RequestBody createRoomIdDTO createRoomIdDTO) {
-
-        String roomId = createRoomIdDTO.getRoomId();
+    // Create Room
+    @PostMapping
+    public ResponseEntity<?> createRoom(@RequestBody String roomId) {
+//        String roomId = createRoomIdDTO.getRoomId();
 
         if (roomRepository.findByRoomId(roomId) != null) {
-            //Room was already created.
+            // Room was already created
             return ResponseEntity.badRequest().body("Room already exists.");
         }
 
-        //Create a new Room
+        // Create a new Room
         Room room = new Room();
         room.setRoomId(roomId);
         Room savedRoom = roomRepository.save(room);
-        return ResponseEntity.status(HttpStatus.CREATED).body(room);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedRoom); // Return the saved room
     }
 
-    //Get Room
+    // Get Room by roomId
     @GetMapping("/{roomId}")
     public ResponseEntity<?> joinRoom(@PathVariable String roomId) {
         Room room = roomRepository.findByRoomId(roomId);
         if (room == null) {
             return ResponseEntity.badRequest().body("Room Not Found!!");
         }
-
-        return ResponseEntity.ok(room);
+        return ResponseEntity.ok(room);  // Automatically returns room as JSON
     }
 
-    //Get All the messages of the room.
+    // Get All Messages of the Room (with pagination)
     @GetMapping("/{roomId}/messages")
     public ResponseEntity<List<Message>> getMessages(@PathVariable String roomId,
                                                      @RequestParam(value = "page", defaultValue = "0", required = false) int page,
                                                      @RequestParam(value = "size", defaultValue = "20", required = false) int size) {
         Room room = roomRepository.findByRoomId(roomId);
         if (room == null) {
-            //build is equivalent to:
-            //return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().build();  // 400 Bad Request if room not found
         }
 
-        //Get Messages
-        //Pagination of the messages
+        // Get Messages (Pagination)
         List<Message> messageList = room.getMessages();
         int start = Math.max(0, messageList.size() - (page + 1) * size);
         int end = Math.min(messageList.size(), start + size);
         List<Message> paginatedMessages = messageList.subList(start, end);
-        return ResponseEntity.ok(paginatedMessages);
+        return ResponseEntity.ok(paginatedMessages);  // Return paginated messages
     }
 
+    // Get All Rooms
     @GetMapping("/allRooms")
     public ResponseEntity<List<Room>> getAllRooms() {
         List<Room> rooms = roomRepository.findAll();  // Fetch all rooms from MongoDB

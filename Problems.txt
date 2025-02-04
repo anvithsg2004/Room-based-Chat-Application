@@ -1,2 +1,5 @@
 1) Understanding and building the websockets for the first time.
-2) DTO class.
+2) DTO class because of the postman REST API.
+3) Toast Message.
+4) npm install @stomp/stompjs sockjs-client for websocket.
+5) Connecting with the frontend.

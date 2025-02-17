@@ -34,6 +34,7 @@ const ChatPage = () => {
     const chatBoxRef = useRef(null);
     const [stompClient, setStompClient] = useState(null);
     const connectedRef = useRef(false);  // Track connection status for toast
+    const isSubscribed = useRef(false); // Track subscription status
 
     //page init:
     //messages ko load karne honge
@@ -49,7 +50,7 @@ const ChatPage = () => {
         if (connected) {
             loadMessages();
         }
-    }, []);
+    }, [connected, roomId, currentUser]);
 
     //scroll down
 
@@ -73,23 +74,28 @@ const ChatPage = () => {
                 setStompClient(client);
                 toast.success("Connected");
 
-                client.subscribe(`/topic/room/${roomId}`, (message) => {
-                    const newMessage = JSON.parse(message.body);
-                    // Store the new message in localStorage to notify other tabs
-                    const messagesFromStorage = JSON.parse(localStorage.getItem(`messages_${roomId}`)) || [];
-                    const updatedMessages = [...messagesFromStorage, newMessage];
-                    localStorage.setItem(`messages_${roomId}`, JSON.stringify(updatedMessages));
-
-                    // Update the current tab's state
-                    setMessages(updatedMessages);
-                });
+                // Track subscription status
+                if (!isSubscribed.current) {
+                    client.subscribe(`/topic/room/${roomId}`, (message) => {
+                        const newMessage = JSON.parse(message.body);
+                        setMessages((prev) => [...prev, newMessage]);
+                    });
+                    isSubscribed.current = true;
+                }
             });
         };
 
         if (connected) {
             connectWebSocket();
         }
-    }, [roomId]);
+
+        return () => {
+            if (stompClient) {
+                stompClient.disconnect(); // Cleanup on unmount
+                isSubscribed.current = false;
+            }
+        };
+    }, [roomId, connected]); // Only re-run if roomId or connected changes
 
     useEffect(() => {
         // Listen for changes in localStorage
@@ -119,20 +125,31 @@ const ChatPage = () => {
                 roomId: roomId,
             };
 
-            // Send the message via WebSocket
             stompClient.send(
                 `/app/sendMessage/${roomId}`,
                 {},
                 JSON.stringify(message)
             );
 
-            // Immediately add the sent message to the messages state to update the UI
-            setMessages((prevMessages) => [...prevMessages, message]);
-
-            // Clear the input field
             setInput("");
         }
     };
+
+    // Load messages when connected, roomId, or currentUser changes
+    useEffect(() => {
+        async function loadMessages() {
+            try {
+                const messages = await getMessagess(roomId);
+                setMessages(messages);
+            } catch (error) {
+                console.error("Error loading messages:", error);
+            }
+        }
+
+        if (connected && roomId && currentUser) { // Ensure all required values are set
+            loadMessages();
+        }
+    }, [connected, roomId, currentUser]); // Add dependencies here
 
 
     function handleLogout() {
@@ -146,25 +163,25 @@ const ChatPage = () => {
     return (
         <div className="">
             {/* this is a header */}
-            <header className="dark:border-gray-700  fixed w-full dark:bg-gray-900 py-5 shadow flex justify-around items-center">
+            <header className="fixed w-full bg-white py-5 shadow flex justify-around items-center border-b border-orange-200">
                 {/* room name container */}
                 <div>
-                    <h1 className="text-xl font-semibold">
-                        Room : <span>{roomId}</span>
+                    <h1 className="text-xl font-semibold text-gray-800">
+                        Room : <span className="text-orange-500">{roomId}</span>
                     </h1>
                 </div>
                 {/* username container */}
 
                 <div>
-                    <h1 className="text-xl font-semibold">
-                        User : <span>{currentUser}</span>
+                    <h1 className="text-xl font-semibold text-gray-800">
+                        User : <span className="text-orange-500">{currentUser}</span>
                     </h1>
                 </div>
                 {/* button: leave room */}
                 <div>
                     <button
                         onClick={handleLogout}
-                        className="dark:bg-red-500 dark:hover:bg-red-700 px-3 py-2 rounded-full"
+                        className="bg-red-500 hover:bg-red-700 px-3 py-2 rounded-full text-white"
                     >
                         Leave Room
                     </button>
@@ -173,7 +190,7 @@ const ChatPage = () => {
 
             <main
                 ref={chatBoxRef}
-                className="py-20 px-10   w-2/3 dark:bg-slate-600 mx-auto h-screen overflow-auto "
+                className="py-20 px-10 w-2/3 mx-auto h-screen overflow-auto bg-white"
             >
                 {messages.map((message, index) => (
                     <div
@@ -182,19 +199,21 @@ const ChatPage = () => {
                             } `}
                     >
                         <div
-                            className={`my-2 ${message.sender === currentUser ? "bg-green-800" : "bg-gray-800"
-                                } p-2 max-w-xs rounded`}
+                            className={`my-2 ${message.sender === currentUser
+                                ? "bg-orange-200 text-gray-800"
+                                : "bg-gray-100 text-gray-800"
+                                } p-2 max-w-xs rounded-lg shadow`}
                         >
                             <div className="flex flex-row gap-2">
                                 <img
-                                    className="h-10 w-10"
-                                    src={"https://avatar.iran.liara.run/public/43"}
+                                    className="h-10 w-10 rounded-full"
+                                    src={"https://via.placeholder.com/40"}
                                     alt=""
                                 />
                                 <div className="flex flex-col gap-1">
                                     <p className="text-sm font-bold">{message.sender}</p>
                                     <p>{message.content}</p>
-                                    <p className="text-xs text-gray-400">
+                                    <p className="text-xs text-gray-500">
                                         {timeAgo(message.timeStamp)}
                                     </p>
                                 </div>
@@ -204,8 +223,8 @@ const ChatPage = () => {
                 ))}
             </main>
             {/* input message container */}
-            <div className=" fixed bottom-4 w-full h-16 ">
-                <div className="h-full  pr-10 gap-4 flex items-center justify-between rounded-full w-1/2 mx-auto dark:bg-gray-900">
+            <div className="fixed bottom-4 w-full h-16">
+                <div className="h-full pr-10 gap-4 flex items-center justify-between rounded-full w-1/2 mx-auto bg-white border border-gray-200 shadow">
                     <input
                         value={input}
                         onChange={(e) => {
@@ -218,16 +237,16 @@ const ChatPage = () => {
                         }}
                         type="text"
                         placeholder="Type your message here..."
-                        className=" w-full  dark:border-gray-600 b dark:bg-gray-800  px-5 py-2 rounded-full h-full focus:outline-none  "
+                        className="w-full px-5 py-2 rounded-full h-full focus:outline-none focus:ring-2 focus:ring-orange-500 border border-gray-200 text-black placeholder-gray-400"
                     />
 
                     <div className="flex gap-1">
-                        <button className="dark:bg-purple-600 h-10 w-10  flex   justify-center items-center rounded-full">
+                        <button className="bg-purple-500 hover:bg-purple-700 h-10 w-10 flex justify-center items-center rounded-full text-white">
                             <MdAttachFile size={20} />
                         </button>
                         <button
                             onClick={sendMessage}
-                            className="dark:bg-green-600 h-10 w-10  flex   justify-center items-center rounded-full"
+                            className="bg-orange-500 hover:bg-orange-700 h-10 w-10 flex justify-center items-center rounded-full text-white"
                         >
                             <MdSend size={20} />
                         </button>

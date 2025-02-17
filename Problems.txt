@@ -3,3 +3,72 @@
 3) Toast Message.
 4) npm install @stomp/stompjs sockjs-client for websocket.
 5) Connecting with the frontend.
+6) 1. Stomp.js Factory Warning
+Issue:
+I received a warning that Stomp.over did not receive a factory. This indicated that the Stomp client was not configured with a factory, which is necessary for features like auto-reconnect.
+Root Cause:
+The Stomp.over method requires a factory configuration to enable features like automatic reconnection and heartbeat management. Without this, the client wouldn't handle disconnections gracefully.
+Solution:
+To resolve this, I created a factory with proper configuration for auto-reconnect and heartbeat settings. Here's the code snippet:
+JavaScript
+Copy
+const factory = new Stomp.Client({
+  brokerURL: `${baseURL}/chat`,
+  reconnectDelay: 5000, // Reconnect every 5 seconds
+  heartbeatIncoming: 0, // No server heartbeats
+  heartbeatOutgoing: 20000, // Client sends heartbeat every 20 seconds
+});
+
+const client = Stomp.over(factory);
+By using this factory, I ensured that the Stomp client was properly configured to handle reconnections and maintain a stable connection with the server.
+2. Duplicate Messages in UI
+Issue:
+Messages were being duplicated in the UI, which was a significant problem for user experience.
+Root Cause:
+The WebSocket subscription was being created multiple times, leading to duplicate messages being added to the state. This happened because the subscription logic was not properly managed.
+Solution:
+To address this, I used a useRef to track the subscription status and ensured the subscription was only created once. I also added cleanup logic to unsubscribe and disconnect when the component unmounts. Here's the updated code:
+JavaScript
+Copy
+const isSubscribed = useRef(false); // Track subscription status
+
+useEffect(() => {
+  const connectWebSocket = () => {
+    const sock = new SockJS(`${baseURL}/chat`);
+    const client = Stomp.over(sock);
+
+    client.connect({}, () => {
+      setStompClient(client);
+      toast.success("Connected");
+
+      if (!isSubscribed.current) {
+        client.subscribe(`/topic/room/${roomId}`, (message) => {
+          const newMessage = JSON.parse(message.body);
+          setMessages((prev) => [...prev, newMessage]);
+        });
+        isSubscribed.current = true;
+      }
+    });
+  };
+
+  if (connected) {
+    connectWebSocket();
+  }
+
+  return () => {
+    if (stompClient) {
+      stompClient.disconnect();
+      isSubscribed.current = false;
+    }
+  };
+}, [roomId, connected]); // Dependencies
+By tracking the subscription status and ensuring proper cleanup, I prevented duplicate messages and ensured the WebSocket connection was managed efficiently.
+3. net::ERR_BLOCKED_BY_CLIENT Error
+Issue:
+I encountered the net::ERR_BLOCKED_BY_CLIENT error, which indicated that the WebSocket connection was being blocked by the client.
+Root Cause:
+This error typically occurs due to browser security policies (e.g., CORS) or ad blockers interfering with WebSocket traffic.
+Solution:
+To resolve this, I ensured that the backend allows WebSocket connections from the client's origin. I also checked for any ad blockers or browser extensions that might be blocking WebSocket traffic. By addressing these potential issues, I ensured that the WebSocket connection was not blocked by the client.
+Summary
+By implementing these solutions, I resolved the Stomp.js factory warning, prevented duplicate messages in the UI, and ensured that the WebSocket connection was not blocked by the client. These changes collectively improved the stability and user experience of our chat application.

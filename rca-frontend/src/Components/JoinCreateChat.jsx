@@ -69,7 +69,7 @@ const JoinCreateChat = () => {
                 const response = await createRoomApi(detail.roomId);
                 console.log(response);
                 toast.success("Room Created Successfully !!");
-                
+
                 //join the room
                 setCurrentUser(detail.userName);
                 setRoomId(response.roomId);
@@ -90,18 +90,25 @@ const JoinCreateChat = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center ">
-            <div className="p-10 dark:border-gray-700 border w-full flex flex-col gap-5 max-w-md rounded dark:bg-gray-900 shadow">
-                <div>
-                    <img src={chatIcon} className="w-24 mx-auto" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-orange-100 to-white animate-fade-in">
+            <div className="p-10 border w-full flex flex-col gap-5 max-w-md rounded-lg shadow-2xl bg-white animate-scale-up">
+                <div className="flex justify-center items-center">
+                    <img
+                        src={chatIcon}
+                        className="w-24 h-24 animate-spin-slow hover:animate-spin"
+                        alt="Chat Icon"
+                    />
                 </div>
 
-                <h1 className="text-2xl font-semibold text-center ">
-                    Join Room / Create Room ..
+                <h1 className="text-2xl font-semibold text-center text-gray-800 animate-pulse">
+                    Join Room / Create Room
                 </h1>
-                {/* name div */}
-                <div className="">
-                    <label htmlFor="name" className="block font-medium mb-2">
+
+                <div className="relative animate-fade-in-up">
+                    <label
+                        htmlFor="name"
+                        className="block font-medium mb-2 text-gray-700 transition-colors hover:text-orange-500"
+                    >
                         Your name
                     </label>
                     <input
@@ -111,13 +118,17 @@ const JoinCreateChat = () => {
                         id="name"
                         name="userName"
                         placeholder="Enter the name"
-                        className="w-full dark:bg-gray-600 px-4 py-2 border dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-gray-50 px-4 py-2 border border-gray-300 rounded-full shadow-sm 
+               focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all 
+               hover:border-orange-300 active:border-orange-500 text-black placeholder-gray-400"
                     />
                 </div>
 
-                {/* room id div */}
-                <div className="">
-                    <label htmlFor="name" className="block font-medium mb-2">
+                <div className="relative animate-fade-in-up">
+                    <label
+                        htmlFor="roomId"
+                        className="block font-medium mb-2 text-gray-700 transition-colors hover:text-orange-500"
+                    >
                         Room ID / New Room ID
                     </label>
                     <input
@@ -125,24 +136,28 @@ const JoinCreateChat = () => {
                         onChange={handleFormInputChange}
                         value={detail.roomId}
                         type="text"
-                        id="name"
+                        id="roomId"
                         placeholder="Enter the room id"
-                        className="w-full dark:bg-gray-600 px-4 py-2 border dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-gray-50 px-4 py-2 border border-gray-300 rounded-full 
+               focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all 
+               hover:border-orange-300 active:border-orange-500 text-black placeholder-gray-400"
                     />
                 </div>
 
-                {/* button  */}
-                <div className="flex justify-center gap-2 mt-4">
+                <div className="flex justify-center gap-2 mt-6">
                     <button
-                        // This is for joining the chat before If the user has already created the room ID.
                         onClick={joinChat}
-                        className="px-3 py-2 dark:bg-blue-500 hover:dark:bg-blue-800 rounded-full"
+                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 
+                        transition-all transform hover:scale-105 shadow-lg rounded-full text-white 
+                        focus:outline-none focus:ring-2 focus:ring-blue-300"
                     >
                         Join Room
                     </button>
                     <button
                         onClick={createRoom}
-                        className="px-3 py-2 dark:bg-orange-500 hover:dark:bg-orange-800 rounded-full"
+                        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 
+                        transition-all transform hover:scale-105 shadow-lg rounded-full text-white 
+                        focus:outline-none focus:ring-2 focus:ring-orange-300"
                     >
                         Create Room
                     </button>

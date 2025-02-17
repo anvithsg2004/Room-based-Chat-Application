@@ -31,7 +31,7 @@ public class ChatController {
     //After processing the message, the ChatController sends it to everyone subscribed to /topic/room/123.
     //This is how everyone in the same room sees the message.
     @MessageMapping("/sendMessage/{roomId}")
-    @SendTo("/topic/room/{roomId")
+    @SendTo("/topic/room/{roomId}")
     public Message sendMessage(
             @DestinationVariable String roomId,
             @RequestBody MessageRequest request

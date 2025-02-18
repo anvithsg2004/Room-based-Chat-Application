@@ -5,6 +5,7 @@ import com.anvith.rca_backend.entities.MessageRequest;
 import com.anvith.rca_backend.entities.Room;
 import com.anvith.rca_backend.repositories.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -20,6 +21,9 @@ public class ChatController {
 
     @Autowired
     public RoomRepository roomRepository;
+
+    @Autowired
+    private RedisTemplate<String, Message> redisTemplate;
 
     //For sending and receiving messages
     //1. @MessageMapping("/sendMessage/{roomId}"):
@@ -39,6 +43,7 @@ public class ChatController {
 
         Room room = roomRepository.findByRoomId(request.getRoomId());
 
+        //Some changes Have to be made.
         Message message = new Message();
         message.setContent(request.getContent());
         message.setSender(request.getSender());
@@ -47,6 +52,10 @@ public class ChatController {
         if (room != null) {
             room.getMessages().add(message);
             roomRepository.save(room);
+
+            // Push to Redis list and keep the last 100 messages
+            redisTemplate.opsForList().rightPush("room:" + roomId, message);
+            redisTemplate.opsForList().trim("room:" + roomId, -100L, -1L);
         } else {
             throw new RuntimeException("Room not found !!");
         }

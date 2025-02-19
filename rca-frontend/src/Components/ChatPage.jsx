@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { baseURL } from "../config/AxiosHelper";
 import { getMessagess } from "../services/RoomService";
 import { timeAgo } from "../config/helper";
+
 const ChatPage = () => {
     const {
         roomId,
@@ -17,9 +18,6 @@ const ChatPage = () => {
         setRoomId,
         setCurrentUser,
     } = useChatContext();
-    // console.log(roomId);
-    // console.log(currentUser);
-    // console.log(connected);
 
     const navigate = useNavigate();
     useEffect(() => {
@@ -36,9 +34,18 @@ const ChatPage = () => {
     const connectedRef = useRef(false);  // Track connection status for toast
     const isSubscribed = useRef(false); // Track subscription status
 
-    //page init:
-    //messages ko load karne honge
+    //Mount = First render
+    //Render = Not exactly. Render means React is drawing (or updating) the UI based on state/props.
+    //Refresh usually means reloading the entire page, which React avoids by updating only the necessary parts. 🚀
 
+    //Here is a concept of useEffect.
+    //useEffect Type	                    When It Runs?	        Use Case
+    //useEffect(() => {...})                On every render	        Logging, animations
+    //useEffect(() => {...}, [])	        Only on mount	        Fetching initial data
+    //useEffect(() => {...}, [dependency])	When dependency changes	Fetching data when roomId changes
+    //Cleanup(return () => {... })	        Before unmounting	    Cleaning event listeners, stopping intervals
+
+    //This Is for Loading the Message to the frontend.
     useEffect(() => {
         async function loadMessages() {
             try {
@@ -52,8 +59,7 @@ const ChatPage = () => {
         }
     }, [connected, roomId, currentUser]);
 
-    //scroll down
-
+    //scroll down the chat box
     useEffect(() => {
         if (chatBoxRef.current) {
             chatBoxRef.current.scroll({

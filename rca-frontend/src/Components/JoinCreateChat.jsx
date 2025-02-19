@@ -40,11 +40,10 @@ const JoinCreateChat = () => {
 
     async function joinChat() {
         if (validateForm()) {
-            //join chat
-
+            //Join Chat
             try {
                 const room = await joinChatApi(detail.roomId);
-                toast.success("joined..");
+                toast.success("Joined..");
                 setCurrentUser(detail.userName);
                 setRoomId(room.roomId);
                 setConnected(true);

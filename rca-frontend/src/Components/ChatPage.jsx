@@ -45,7 +45,9 @@ const ChatPage = () => {
     //useEffect(() => {...}, [dependency])	When dependency changes	Fetching data when roomId changes
     //Cleanup(return () => {... })	        Before unmounting	    Cleaning event listeners, stopping intervals
 
-    //This Is for Loading the Message to the frontend.
+    //Loading Previous Messages When User Joins
+    //When the user joins a chat, fetches old messages and shows them.
+    //Runs only when connected, roomId, or currentUser changes.
     useEffect(() => {
         async function loadMessages() {
             try {
@@ -69,8 +71,11 @@ const ChatPage = () => {
         }
     }, [messages]);
 
-    //stompClient ko init karne honge
+    //Connecting to WebSocket
     //subscribe
+    //Opens WebSocket connection when user joins a room.
+    //Subscribes to the room to receive messages.
+    //Disconnects WebSocket when the user leaves.
     useEffect(() => {
         const connectWebSocket = () => {
             const sock = new SockJS(`${baseURL}/chat`);
@@ -103,6 +108,8 @@ const ChatPage = () => {
         };
     }, [roomId, connected]); // Only re-run if roomId or connected changes
 
+    //Sync Messages Across Multiple Tabs
+    //If multiple browser tabs are open, ensures all tabs get the latest messages.
     useEffect(() => {
         // Listen for changes in localStorage
         const handleStorageChange = (e) => {
@@ -123,6 +130,7 @@ const ChatPage = () => {
 
 
     //send message handle
+    //Sending a Message
     const sendMessage = async () => {
         if (stompClient && connected && input.trim()) {
             const message = {
